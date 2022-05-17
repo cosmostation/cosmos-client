@@ -1,6 +1,6 @@
 import type { OfflineSigner } from '@cosmjs/proto-signing';
 import { tendermint } from '@cosmostation/extension-client';
-import type { SignAminoDoc, SignDirectDoc } from '@cosmostation/extension-client/types/message';
+import type { SignAminoDoc } from '@cosmostation/extension-client/types/message';
 
 import { ExtensionInstallError } from './error';
 
@@ -21,7 +21,12 @@ export const getExtensionOfflineSigner = async (chainId: string): Promise<Offlin
         return { signed: response.signed_doc, signature: { pub_key: response.pub_key, signature: response.signature } };
       },
       signDirect: async (_, signDoc) => {
-        const response = await provider.signDirect(chainId, signDoc as unknown as SignDirectDoc);
+        const response = await provider.signDirect(chainId, {
+          account_number: String(signDoc.accountNumber),
+          auth_info_bytes: signDoc.authInfoBytes,
+          body_bytes: signDoc.bodyBytes,
+          chain_id: signDoc.chainId,
+        });
         return {
           signed: {
             accountNumber: response.signed_doc.account_number as unknown as Long,
