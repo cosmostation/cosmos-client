@@ -2,7 +2,11 @@ import type { OfflineSigner } from '@cosmjs/proto-signing';
 import { tendermint } from '@cosmostation/extension-client';
 import type { SignAminoDoc, SignDirectDoc } from '@cosmostation/extension-client/types/message';
 
-export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner | null> => {
+import { ExtensionInstallError } from './error';
+
+export { ExtensionInstallError };
+
+export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner> => {
   try {
     const provider = await tendermint();
 
@@ -32,8 +36,8 @@ export const getExtensionOfflineSigner = async (chainId: string): Promise<Offlin
 
     return signer;
   } catch {
-    return null;
+    throw new ExtensionInstallError();
   }
 };
 
-export const getOfflineSigner = async (chainId: string) => (await getExtensionOfflineSigner(chainId)) || null;
+export const getOfflineSigner = (chainId: string) => getExtensionOfflineSigner(chainId);
