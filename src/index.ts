@@ -21,37 +21,42 @@ export interface CosmostationAccount {
 }
 
 export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner> => {
-  const provider = await tendermint();
-  const signer: OfflineSigner = {
-    getAccounts: async () => {
-      const response = await provider.getAccount(chainId);
-      return [{ address: response.address, pubkey: response.publicKey, algo: 'secp256k1' }];
-    },
-    signAmino: async (_, signDoc) => {
-      const response = await provider.signAmino(chainId, signDoc as unknown as SignAminoDoc);
+  try {
+    const provider = await tendermint();
 
-      return { signed: response.signed_doc, signature: { pub_key: response.pub_key, signature: response.signature } };
-    },
-    signDirect: async (_, signDoc) => {
-      const response = await provider.signDirect(chainId, {
-        account_number: String(signDoc.accountNumber),
-        auth_info_bytes: signDoc.authInfoBytes,
-        body_bytes: signDoc.bodyBytes,
-        chain_id: signDoc.chainId,
-      });
-      return {
-        signed: {
-          accountNumber: response.signed_doc.account_number as unknown as Long,
-          chainId: response.signed_doc.chain_id,
-          authInfoBytes: response.signed_doc.auth_info_bytes,
-          bodyBytes: response.signed_doc.body_bytes,
-        },
-        signature: { pub_key: response.pub_key, signature: response.signature },
-      };
-    },
-  };
+    const signer: OfflineSigner = {
+      getAccounts: async () => {
+        const response = await provider.getAccount(chainId);
+        return [{ address: response.address, pubkey: response.publicKey, algo: 'secp256k1' }];
+      },
+      signAmino: async (_, signDoc) => {
+        const response = await provider.signAmino(chainId, signDoc as unknown as SignAminoDoc);
 
-  return signer;
+        return { signed: response.signed_doc, signature: { pub_key: response.pub_key, signature: response.signature } };
+      },
+      signDirect: async (_, signDoc) => {
+        const response = await provider.signDirect(chainId, {
+          account_number: String(signDoc.accountNumber),
+          auth_info_bytes: signDoc.authInfoBytes,
+          body_bytes: signDoc.bodyBytes,
+          chain_id: signDoc.chainId,
+        });
+        return {
+          signed: {
+            accountNumber: response.signed_doc.account_number as unknown as Long,
+            chainId: response.signed_doc.chain_id,
+            authInfoBytes: response.signed_doc.auth_info_bytes,
+            bodyBytes: response.signed_doc.body_bytes,
+          },
+          signature: { pub_key: response.pub_key, signature: response.signature },
+        };
+      },
+    };
+
+    return signer;
+  } catch {
+    throw new ExtensionInstallError();
+  }
 };
 
 export const connectWallet = async (): Promise<WalletConnect> => {
