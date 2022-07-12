@@ -1,13 +1,13 @@
 import type { AccountData, AminoSignResponse } from '@cosmjs/amino';
-import { ExtensionInstallError, GetAccountError, MobileConnectError, SignError } from './error';
-
-import { CosmostationWCModal } from '@cosmostation/wc-modal';
 import type { OfflineSigner } from '@cosmjs/proto-signing';
-import type { SignAminoDoc } from '@cosmostation/extension-client/types/message';
-import WalletConnect from '@walletconnect/client';
-import { isMobile } from '@walletconnect/browser-utils';
-import { payloadId } from '@walletconnect/utils';
 import { tendermint } from '@cosmostation/extension-client';
+import type { SignAminoDoc } from '@cosmostation/extension-client/types/message';
+import { CosmostationWCModal } from '@cosmostation/wc-modal';
+import { isMobile } from '@walletconnect/browser-utils';
+import WalletConnect from '@walletconnect/client';
+import { payloadId } from '@walletconnect/utils';
+
+import { ExtensionInstallError, GetAccountError, MobileConnectError, SignError } from './error';
 
 export { ExtensionInstallError };
 
@@ -66,11 +66,11 @@ export const connectWallet = async (): Promise<WalletConnect> => {
     qrcodeModal: new CosmostationWCModal(),
   });
 
-  return new Promise(async (resolve, reject) => {
-    connector.killSession();
-    connector.createSession();
+  return new Promise((resolve, reject) => {
+    void connector.killSession();
+    void connector.createSession();
 
-    connector.on('connect', async (error, payload) => {
+    connector.on('connect', (error) => {
       if (error) {
         return reject(error);
       }
