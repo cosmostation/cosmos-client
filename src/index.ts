@@ -1,6 +1,6 @@
 import type { AccountData, AminoSignResponse } from '@cosmjs/amino';
 import type { OfflineSigner } from '@cosmjs/proto-signing';
-import { tendermint } from '@cosmostation/extension-client';
+import { cosmos } from '@cosmostation/extension-client';
 import type { SignAminoDoc } from '@cosmostation/extension-client/types/message';
 import { CosmostationWCModal } from '@cosmostation/wc-modal';
 import { isMobile } from '@walletconnect/browser-utils';
@@ -22,7 +22,7 @@ export interface CosmostationAccount {
 
 export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner> => {
   try {
-    const provider = await tendermint();
+    const provider = await cosmos();
 
     const signer: OfflineSigner = {
       getAccounts: async () => {
