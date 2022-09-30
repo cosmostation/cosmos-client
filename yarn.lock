@@ -103,10 +103,10 @@
   dependencies:
     cpy-cli "^4.1.0"
 
-"@cosmostation/wc-modal@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@cosmostation/wc-modal/-/wc-modal-0.0.3.tgz#3421cb59b0d0d910ba955dfaf4afe796a2715224"
-  integrity sha512-tAAbCWKCI4mluTlCvzxyQAGn5/TdQOUsHyxetVcgGHCDZf9AcjLqS/yZlaSHuN6Wf5pv891HioJLQxwwO2a68Q==
+"@cosmostation/wc-modal@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@cosmostation/wc-modal/-/wc-modal-0.0.4.tgz#61442b0c51201dda9ee90cfcb3002848eadc7ba2"
+  integrity sha512-/SkbFKKQxUCMI8ZnULVTsWLFUx9pG+p7MFvv/Ifgz+xBAPe9nBCJlJ/LdvJ6HuAIPajc1vcXB2/OzGL9TjMpNw==
   dependencies:
     "@walletconnect/browser-utils" "^1.6.5"
     "@walletconnect/types" "^1.6.5"

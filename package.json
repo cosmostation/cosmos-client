@@ -1,6 +1,6 @@
 {
   "name": "@cosmostation/cosmos-client",
-  "version": "0.0.3",
+  "version": "0.0.4-alpha.0",
   "description": "cosmostation cosmos client",
   "scripts": {
     "tsc": "tsc",
@@ -31,7 +31,7 @@
     "@cosmjs/amino": "^0.28.4",
     "@cosmjs/proto-signing": "^0.28.4",
     "@cosmostation/extension-client": "^0.1.3",
-    "@cosmostation/wc-modal": "^0.0.3",
+    "@cosmostation/wc-modal": "^0.0.4",
     "@walletconnect/browser-utils": "^1.6.5",
     "@walletconnect/client": "^1.7.8",
     "@walletconnect/utils": "^1.6.5"
