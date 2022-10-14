@@ -6,6 +6,14 @@ export class ExtensionInstallError extends Error {
   }
 }
 
+export class WalletConnectError extends Error {
+  constructor() {
+    super();
+    this.name = 'WalletConnectError';
+    Object.setPrototypeOf(this, ExtensionInstallError.prototype);
+  }
+}
+
 export class GetAccountError extends Error {
   constructor() {
     super();

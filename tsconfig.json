@@ -15,7 +15,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": ["node_modules/@types", "src/types/d.ts"],
     "baseUrl": "./src",
     "paths": {
       "~/*": ["./*"]

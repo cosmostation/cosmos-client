@@ -7,18 +7,10 @@ import { isMobile } from '@walletconnect/browser-utils';
 import WalletConnect from '@walletconnect/client';
 import { payloadId } from '@walletconnect/utils';
 
-import { ExtensionInstallError, GetAccountError, MobileConnectError, SignError } from './error';
+import { ExtensionInstallError, GetAccountError, MobileConnectError, SignError, WalletConnectError } from './error';
+import type { Account, CosAccountResponse, Cosmostation, CosmostationAccount, SignAminoResponse, SignDirectResponse, WalletType } from './types/cosmos';
 
 export { ExtensionInstallError };
-
-export interface CosmostationAccount {
-  address: Uint8Array;
-  algo: string;
-  bech32Address: string;
-  isNanoLedger: boolean;
-  name: string;
-  pubKey: Uint8Array;
-}
 
 export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner> => {
   try {
@@ -63,7 +55,7 @@ export const connectWallet = async (): Promise<WalletConnect> => {
   const connector = new WalletConnect({
     bridge: 'https://bridge.walletconnect.org',
     signingMethods: ['cosmostation_wc_accounts_v1', 'cosmostation_wc_sign_tx_v1'],
-    qrcodeModal: new CosmostationWCModal(),
+    qrcodeModal: { open(uri, cb, opts) {}, close() {} },
   });
 
   return new Promise((resolve, reject) => {
@@ -133,3 +125,149 @@ export const getOfflineSigner = async (chainId: string) => {
   }
   return getExtensionOfflineSigner(chainId);
 };
+
+const walletConnectForInApp = new WalletConnect({
+  bridge: 'https://bridge.walletconnect.org',
+});
+
+const walletConnectForPC = new WalletConnect({
+  bridge: 'https://bridge.walletconnect.org',
+});
+
+export function hasExtension(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(() => {
+      if (window.cosmostation) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      reject(new ExtensionInstallError());
+    }, 500);
+  });
+}
+
+export const cosmostation = async (walletType: WalletType): Promise<Cosmostation> => {
+  if (isMobile()) {
+    // not webview
+    const dappOrigin = window.location.origin;
+    window.location.href = `cosmostation://internaldapp?${dappOrigin}`;
+
+    // webview
+    try {
+      if (!walletConnectForInApp.connected) {
+        await walletConnectForInApp.createSession();
+
+        walletConnectForInApp.on('connect', (error) => {
+          if (error) {
+            throw new WalletConnectError();
+          }
+        });
+      }
+
+      return {
+        request: async ({ method, params }) => {
+          const message = {
+            id: payloadId(),
+            jsonrpc: '2.0',
+            method,
+            params: params as unknown[],
+          };
+
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return await walletConnectForInApp.sendCustomRequest(message);
+        },
+        getAccounts: async (chainId) => {
+          try {
+            const params = {
+              id: payloadId(),
+              jsonrpc: '2.0',
+              method: 'cosmostation_wc_accounts_v1',
+              params: [chainId],
+            };
+            const keys = (await walletConnectForInApp.sendCustomRequest(params)) as CosmostationAccount[];
+            const accounts = keys.map(
+              (key) =>
+                ({
+                  address: key.bech32Address,
+                  algo: 'secp256k1',
+                  pubkey: Buffer.from(key.pubKey).toString('hex'),
+                } as Account),
+            );
+            return accounts;
+          } catch (err) {
+            throw new GetAccountError();
+          }
+        },
+        signAmino: async (signer, doc) => {
+          try {
+            const signedTxs = (await walletConnectForInApp.sendCustomRequest({
+              id: payloadId(),
+              jsonrpc: '2.0',
+              method: 'cosmostation_wc_sign_tx_v1',
+              params: [doc.chain_id, signer, doc],
+            })) as AminoSignResponse[];
+
+            const signedTx = signedTxs[0];
+
+            const returnData: SignAminoResponse = {
+              signature: signedTx.signature.signature,
+              signDoc: signedTx.signed as SignAminoDoc,
+            };
+            return returnData;
+          } catch (err) {
+            throw new SignError();
+          }
+        },
+        signDirect: () => {
+          throw new SignError();
+        },
+        on: () => {
+          return;
+        },
+        off: () => {
+          return;
+        },
+      };
+    } catch (e) {
+      await walletConnectForInApp.killSession();
+      throw e;
+    }
+  } else {
+    if (walletType === 'extension') {
+      try {
+        await hasExtension();
+
+        return {
+          on: window.cosmostation.cosmos.on,
+          off: window.cosmostation.cosmos.off,
+          request: async ({ method, params }) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return await window.cosmostation.cosmos.request({ method, params });
+          },
+          getAccounts: async (chainId) => {
+            const response = (await window.cosmostation.cosmos.request({ method: 'cos_requestAccount', params: { chainName: chainId } })) as CosAccountResponse;
+            return [
+              { address: response.address, algo: response.isEthermint ? 'ethsecp256k1' : 'secp256k1', pubkey: Buffer.from(response.publicKey).toString('hex') },
+            ];
+          },
+          signAmino: async (_, doc) => {
+            return (await window.cosmostation.cosmos.request({ method: 'cosmos_signAmino', params: { signDoc: doc } })) as SignAminoResponse;
+          },
+          signDirect: async (_, doc) => {
+            return (await window.cosmostation.cosmos.request({ method: 'cosmos_signDirect', params: { signDoc: doc } })) as SignDirectResponse;
+          },
+        };
+      } catch (e) {
+        throw e;
+      }
+    } else {
+      throw new Error();
+    }
+  }
+};
+
+export { isMobile };
