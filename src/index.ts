@@ -17,7 +17,7 @@ export interface CosmostationAccount {
   bech32Address: string;
   isNanoLedger: boolean;
   name: string;
-  pubKey: Uint8Array;
+  pubKey: string;
 }
 
 export const getExtensionOfflineSigner = async (chainId: string): Promise<OfflineSigner> => {
@@ -101,7 +101,7 @@ export const getMobileOfflineSignerWithConnect = async (chainId: string): Promis
             ({
               address: key.bech32Address,
               algo: 'secp256k1',
-              pubkey: key.pubKey,
+              pubkey: Buffer.from(key.pubKey, 'hex'),
             } as AccountData),
         );
         return accounts;
